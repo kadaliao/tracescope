@@ -1,0 +1,36 @@
+# Dependencies and generated output
+node_modules/
+dist/
+coverage/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+*.local
+
+# Logs, diagnostics, and profiles
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.cpuprofile
+*.heapprofile
+*.heapsnapshot
+profiles/
+
+# Test and editor artifacts
+playwright-report/
+test-results/
+.cache/
+.vite/
+.idea/
+.vscode/
+*.swp
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
