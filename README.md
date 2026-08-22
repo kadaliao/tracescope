@@ -2,6 +2,10 @@
 
 TraceScope 是一个本机实时网络连接的 3D 地球可视化原型，用于验证未来接入 Deepseek Harness 的产品与技术边界。它会把当前公网目标显示为独立线路，并在线路上播放信号动画；不会把代理链伪装成真实逐跳路径。
 
+![TraceScope 在 3D 地球上同时展示 100 条脱敏演示线路](docs/assets/tracescope-overview.webp)
+
+_100 条合成线路的脱敏压力场景；实时模式只显示本机当前可用的公网目标。_
+
 ## 本地运行
 
 需要 Node.js 20+ 和 macOS 自带的 `lsof`、`traceroute`。
