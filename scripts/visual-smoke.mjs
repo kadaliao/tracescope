@@ -122,6 +122,7 @@ async function inspectZoom() {
     return { cameraDistance: window.traceScopeCamera.position.length(), label: box ? { width: box.width, height: box.height } : null, marker: window.traceScopeMarkerTelemetry?.['physical-origin'], visibleOrdinaryLabels: [...document.querySelectorAll('[data-testid="city-label"]')].filter((node) => getComputedStyle(node).visibility !== 'hidden').length, canvasPngLength: document.querySelector('canvas').toDataURL().length }
   })
   const labelDelta = before.label && after.label ? Math.max(Math.abs(after.label.width / before.label.width - 1), Math.abs(after.label.height / before.label.height - 1)) : null
+  if (after.visibleOrdinaryLabels === 0) throw new Error(`city labels disappeared after zooming in (camera distance ${after.cameraDistance.toFixed(2)})`)
   await page.addStyleTag({ content: '.hop-main strong,.hop-main small,.route-traffic{filter:blur(5px)}' })
   await page.screenshot({ path: '/tmp/tracescope-zoom-in.png', fullPage: true })
   await page.close()

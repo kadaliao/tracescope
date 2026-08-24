@@ -42,10 +42,8 @@ function ScreenSpaceScale({ pixels, telemetryKey, children }: { pixels: number; 
   return <group ref={ref}>{children}</group>
 }
 
-function FixedLabel({ children, className, style, testId, hideWhenNear = false }: { children: ReactNode; className: string; style?: CSSProperties; testId: string; hideWhenNear?: boolean }) {
-  const ref = useRef<HTMLSpanElement>(null)
-  useFrame(({ camera }) => { if (ref.current) ref.current.style.visibility = hideWhenNear && camera.position.length() < 4.5 ? 'hidden' : 'visible' })
-  return <Html center style={{ pointerEvents: 'none' }}><span ref={ref} data-testid={testId} className={className} style={style}>{children}</span></Html>
+function FixedLabel({ children, className, style, testId }: { children: ReactNode; className: string; style?: CSSProperties; testId: string }) {
+  return <Html center style={{ pointerEvents: 'none' }}><span data-testid={testId} className={className} style={style}>{children}</span></Html>
 }
 
 function Earth() {
@@ -105,7 +103,7 @@ function SharedMarkers({ routes }: { routes: TracePlayback[] }) {
 const hopLabelKey = (hop: TraceHop) => `${hop.role || 'trace'}:${hop.geo.city}`
 const hopOwner = (route: TracePlayback, hop: TraceHop) => `${route.id}:${hop.id}`
 
-function Route({ route, onSelect, motion, speed, renderSharedIngress, labelOwners, selected }: { route: TracePlayback; onSelect: (route: TracePlayback, hop: TraceHop) => void; motion: boolean; speed: number; renderSharedIngress: boolean; labelOwners: Map<string, string>; selected: boolean }) {
+function Route({ route, onSelect, motion, speed, renderSharedIngress, labelOwners }: { route: TracePlayback; onSelect: (route: TracePlayback, hop: TraceHop) => void; motion: boolean; speed: number; renderSharedIngress: boolean; labelOwners: Map<string, string> }) {
   const points = useMemo(() => [geo(route.result.physicalOrigin.latitude, route.result.physicalOrigin.longitude, .045), ...route.result.hops.map((hop) => geo(hop.geo.latitude, hop.geo.longitude, .045))], [route])
   return <group>
     {points.slice(1, route.revealed + 1).map((point, index) => {
@@ -113,7 +111,7 @@ function Route({ route, onSelect, motion, speed, renderSharedIngress, labelOwner
       if (hop.role === 'proxy-egress' || hop.role === 'vpn-egress') return null
       const showLabel = labelOwners.get(hopLabelKey(hop)) === hopOwner(route, hop)
       const current = index + 1 === route.revealed && route.status === 'tracing'
-      return <group key={`${route.id}-${index}`} position={point} onClick={(event) => { event.stopPropagation(); onSelect(route, hop) }}><ScreenSpaceScale pixels={current ? 2.7 : 2.1}><mesh><sphereGeometry args={[1, 12, 12]} /><meshBasicMaterial color={route.color} depthTest={false} /></mesh></ScreenSpaceScale>{current && <Pulse color={route.color} motion={route.status === 'tracing'} />}{showLabel && <FixedLabel testId="city-label" className={`city-label route-${route.id}`} style={{ borderColor: route.color }} hideWhenNear={!selected}>{hop.geo.city}</FixedLabel>}</group>
+      return <group key={`${route.id}-${index}`} position={point} onClick={(event) => { event.stopPropagation(); onSelect(route, hop) }}><ScreenSpaceScale pixels={current ? 2.7 : 2.1}><mesh><sphereGeometry args={[1, 12, 12]} /><meshBasicMaterial color={route.color} depthTest={false} /></mesh></ScreenSpaceScale>{current && <Pulse color={route.color} motion={route.status === 'tracing'} />}{showLabel && <FixedLabel testId="city-label" className={`city-label route-${route.id}`} style={{ borderColor: route.color }}>{hop.geo.city}</FixedLabel>}</group>
     })}
     {Array.from({ length: Math.max(0, route.revealed) }, (_, index) => {
       const hop = route.result.hops[index]
@@ -176,7 +174,7 @@ function DenseArrows({ arrows }: { arrows: { id: string; path: THREE.QuadraticBe
   return <instancedMesh ref={ref} args={[undefined, undefined, data.length]} renderOrder={7}><coneGeometry args={[.32, 1, 8]} /><meshBasicMaterial vertexColors depthTest={false} /></instancedMesh>
 }
 
-function DenseRoutes({ routes, labelOwners, selectedRouteId, motion, speed }: { routes: TracePlayback[]; labelOwners: Map<string, string>; selectedRouteId?: string; motion: boolean; speed: number }) {
+function DenseRoutes({ routes, labelOwners, motion, speed }: { routes: TracePlayback[]; labelOwners: Map<string, string>; motion: boolean; speed: number }) {
   const data = useMemo(() => {
     const linePositions: number[] = []
     const lineColors: number[] = []
@@ -185,7 +183,7 @@ function DenseRoutes({ routes, labelOwners, selectedRouteId, motion, speed }: { 
     const signalPaths: THREE.QuadraticBezierCurve3[] = []
     const signalColors: number[] = []
     const terminalArrows: { id: string; path: THREE.QuadraticBezierCurve3; color: string }[] = []
-    const labels: { id: string; point: THREE.Vector3; text: string; color: string; selected: boolean }[] = []
+    const labels: { id: string; point: THREE.Vector3; text: string; color: string }[] = []
     const sharedIngress = new Set<string>()
     for (const route of routes) {
       const color = new THREE.Color(route.color)
@@ -213,13 +211,13 @@ function DenseRoutes({ routes, labelOwners, selectedRouteId, motion, speed }: { 
           const point = points[index + 1]
           nodePositions.push(point.x, point.y, point.z)
           nodeColors.push(color.r, color.g, color.b)
-          if (labelOwners.get(hopLabelKey(hop)) === hopOwner(route, hop)) labels.push({ id: `${route.id}-${hop.id}`, point, text: hop.geo.city, color: route.color, selected: route.id === selectedRouteId })
+          if (labelOwners.get(hopLabelKey(hop)) === hopOwner(route, hop)) labels.push({ id: `${route.id}-${hop.id}`, point, text: hop.geo.city, color: route.color })
         }
       }
     }
     return { linePositions: new Float32Array(linePositions), lineColors: new Float32Array(lineColors), nodePositions: new Float32Array(nodePositions), nodeColors: new Float32Array(nodeColors), signalPaths, signalColors: new Float32Array(signalColors), terminalArrows, labels }
-  }, [routes, labelOwners, selectedRouteId])
-  return <group><lineSegments renderOrder={3}><bufferGeometry><bufferAttribute attach="attributes-position" args={[data.linePositions, 3]} /><bufferAttribute attach="attributes-color" args={[data.lineColors, 3]} /></bufferGeometry><lineBasicMaterial vertexColors transparent opacity={.38} depthTest={false} depthWrite={false} /></lineSegments><points renderOrder={6}><bufferGeometry><bufferAttribute attach="attributes-position" args={[data.nodePositions, 3]} /><bufferAttribute attach="attributes-color" args={[data.nodeColors, 3]} /></bufferGeometry><pointsMaterial size={3.8} sizeAttenuation={false} vertexColors depthTest={false} /></points><DenseSignals paths={data.signalPaths} colors={data.signalColors} motion={motion} speed={speed} /><DenseArrows arrows={data.terminalArrows} />{data.labels.map((label) => <group key={label.id} position={label.point}><FixedLabel testId="city-label" className="city-label" style={{ borderColor: label.color }} hideWhenNear={!label.selected}>{label.text}</FixedLabel></group>)}</group>
+  }, [routes, labelOwners])
+  return <group><lineSegments renderOrder={3}><bufferGeometry><bufferAttribute attach="attributes-position" args={[data.linePositions, 3]} /><bufferAttribute attach="attributes-color" args={[data.lineColors, 3]} /></bufferGeometry><lineBasicMaterial vertexColors transparent opacity={.38} depthTest={false} depthWrite={false} /></lineSegments><points renderOrder={6}><bufferGeometry><bufferAttribute attach="attributes-position" args={[data.nodePositions, 3]} /><bufferAttribute attach="attributes-color" args={[data.nodeColors, 3]} /></bufferGeometry><pointsMaterial size={3.8} sizeAttenuation={false} vertexColors depthTest={false} /></points><DenseSignals paths={data.signalPaths} colors={data.signalColors} motion={motion} speed={speed} /><DenseArrows arrows={data.terminalArrows} />{data.labels.map((label) => <group key={label.id} position={label.point}><FixedLabel testId="city-label" className="city-label" style={{ borderColor: label.color }}>{label.text}</FixedLabel></group>)}</group>
 }
 
 function Scene({ routes, onSelect, selectedRouteId, autoRotate, motion, speed, resetSignal, onReset }: { routes: TracePlayback[]; onSelect: (route: TracePlayback, hop: TraceHop) => void; selectedRouteId?: string; autoRotate: boolean; motion: boolean; speed: number; resetSignal: number; onReset: () => void }) {
@@ -248,7 +246,7 @@ function Scene({ routes, onSelect, selectedRouteId, autoRotate, motion, speed, r
   }, [routes, selectedRouteId])
   const dense = routes.length > 40
   useEffect(() => { controls.current?.reset() }, [resetSignal])
-  return <Canvas camera={{ position: INITIAL_CAMERA, fov: 43 }} dpr={[1, 1.25]} gl={{ antialias: true }} onCreated={({ camera }) => { camera.lookAt(0, 0, 0); camera.updateMatrixWorld(); (window as Window & { traceScopeCamera?: THREE.Camera }).traceScopeCamera = camera }} onDoubleClick={() => { controls.current?.reset(); onReset() }}><color attach="background" args={['#061016']} /><ambientLight intensity={.42} /><directionalLight position={[5, 3, 4]} intensity={1.65} color="#e5fff6" /><directionalLight position={[-4, -1, -3]} intensity={.28} color="#6c9ba2" /><Stars radius={90} depth={50} count={1400} factor={3} fade speed={.2} /><Earth /><SharedMarkers routes={routes} />{dense ? <DenseRoutes routes={routes} labelOwners={labelOwners} selectedRouteId={selectedRouteId} motion={motion} speed={speed} /> : routes.map((route) => { const point = route.result.proxyEgress || route.result.vpnEgress; const role = route.result.proxyEgress ? 'proxy' : route.result.vpnEgress ? 'vpn' : undefined; const renderSharedIngress = !point || !role || firstIngress.get(pointKey(role, point)) === route.id; return <Route key={route.id} route={route} onSelect={onSelect} motion={motion} speed={speed} renderSharedIngress={renderSharedIngress} labelOwners={labelOwners} selected={route.id === selectedRouteId} /> })}<OrbitControls ref={controls} enablePan={false} enableDamping={false} minDistance={3.3} maxDistance={10} autoRotate={autoRotate} autoRotateSpeed={.38} /></Canvas>
+  return <Canvas camera={{ position: INITIAL_CAMERA, fov: 43 }} dpr={[1, 1.25]} gl={{ antialias: true }} onCreated={({ camera }) => { camera.lookAt(0, 0, 0); camera.updateMatrixWorld(); (window as Window & { traceScopeCamera?: THREE.Camera }).traceScopeCamera = camera }} onDoubleClick={() => { controls.current?.reset(); onReset() }}><color attach="background" args={['#061016']} /><ambientLight intensity={.42} /><directionalLight position={[5, 3, 4]} intensity={1.65} color="#e5fff6" /><directionalLight position={[-4, -1, -3]} intensity={.28} color="#6c9ba2" /><Stars radius={90} depth={50} count={1400} factor={3} fade speed={.2} /><Earth /><SharedMarkers routes={routes} />{dense ? <DenseRoutes routes={routes} labelOwners={labelOwners} motion={motion} speed={speed} /> : routes.map((route) => { const point = route.result.proxyEgress || route.result.vpnEgress; const role = route.result.proxyEgress ? 'proxy' : route.result.vpnEgress ? 'vpn' : undefined; const renderSharedIngress = !point || !role || firstIngress.get(pointKey(role, point)) === route.id; return <Route key={route.id} route={route} onSelect={onSelect} motion={motion} speed={speed} renderSharedIngress={renderSharedIngress} labelOwners={labelOwners} /> })}<OrbitControls ref={controls} enablePan={false} enableDamping={false} minDistance={3.3} maxDistance={10} autoRotate={autoRotate} autoRotateSpeed={.38} /></Canvas>
 }
 
 export default Scene
