@@ -1,6 +1,6 @@
 {
   "name": "tracescope",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Real-time local network connections visualized on an interactive 3D globe",
   "private": true,
   "scripts": {
