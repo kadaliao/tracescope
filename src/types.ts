@@ -39,12 +39,10 @@ export interface TraceResult {
   isDemo: boolean
   connection?: ConnectionDetails
 }
-export interface TraceProvider { trace(target: string): Promise<TraceResult> }
 export type TracePlaybackStatus = 'tracing' | 'paused' | 'complete'
 export interface TracePlayback { id: string; result: TraceResult; color: string; revealed: number; status: TracePlaybackStatus }
 
-export type FeedMode = 'live' | 'demo'
-export type FeedState = 'connecting' | 'live' | 'reconnecting' | 'offline' | 'demo'
+export type FeedState = 'connecting' | 'live' | 'reconnecting' | 'offline'
 export interface FeedStatus {
   source: 'mihomo' | 'lsof' | 'none'
   collected: number

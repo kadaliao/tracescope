@@ -1,4 +1,4 @@
-import type { TraceHop, TraceProvider, TraceResult } from './types'
+import type { TraceHop, TraceResult } from './types'
 export const demoPhysicalOrigin = { latitude: 31.2304, longitude: 121.4737, city: '上海', country: '中国' }
 const hop = (ttl: number, ip: string, asn: string, provider: string, city: string, country: string, latitude: number, longitude: number, latencyMs: number): TraceHop => ({ id: `${ttl}-${ip}`, ttl, ip, asn, provider, geo: { city, country, latitude, longitude }, latencyMs })
 const routes: Record<string, Omit<TraceResult, 'id' | 'target' | 'measuredAt' | 'isDemo' | 'physicalOrigin' | 'destination'>> = {
@@ -26,4 +26,3 @@ export function createStressDemoResults(count = 100): TraceResult[] {
     return { ...result, id: `stress-${index + 1}`, target: `stress-${index + 1}.example`, targetLabel: `压力目标 ${index + 1}`, destination: geo, hops: [...result.hops.slice(0, -1), { ...destination, id: `stress-destination-${index + 1}`, geo }] }
   })
 }
-export class DeterministicDemoProvider implements TraceProvider { async trace(target: string): Promise<TraceResult> { await new Promise((resolve) => window.setTimeout(resolve, 260)); return demoResult(target) } }

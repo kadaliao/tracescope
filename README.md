@@ -19,7 +19,7 @@ npm run dev
 - 本机 API：<http://127.0.0.1:8788/health>
 - WebSocket：`ws://127.0.0.1:8788/ws`
 
-`npm run dev` 会同时启动前端和本机服务，两者都只监听 `127.0.0.1`。页面默认连接实时源；后端不可用时，页面会显示重连/离线状态，可以手动切换到明确标注的演示模式。
+`npm run dev` 会同时启动前端和本机服务，两者都只监听 `127.0.0.1`。页面始终连接实时源；后端不可用时，页面会显示重连/离线状态。
 
 地球最多显示 `100` 个真实唯一公网目标。可用 `TRACESCOPE_MAX_ROUTES` 覆盖为 `1..200` 的整数；非法值回落到 `100`。实际目标不足上限时只显示当前可用目标，不补演示数据。
 
@@ -75,4 +75,4 @@ npm run build
 node scripts/visual-smoke.mjs
 ```
 
-单元测试覆盖 Mihomo 与 lsof 解析、Fake-IP/私网过滤、目标去重、最大路线配置、macOS traceroute 解析和 WebSocket schema。视觉 smoke 覆盖桌面、800×600、移动端实时状态、非空 Canvas、线路数量、右下 overlay 不相交、拖拽后无相机回拉以及浏览器错误；`?stress=100` 是明确的本地演示压力入口，不会混入实时 feed。
+单元测试覆盖 Mihomo 与 lsof 解析、Fake-IP/私网过滤、目标去重、最大路线配置、macOS traceroute 解析和 WebSocket schema。视觉 smoke 覆盖桌面、800×600、移动端实时状态、非空 Canvas、线路数量、右下 overlay 不相交、拖拽后无相机回拉以及浏览器错误；`?stress=100` 是明确的本地脱敏压力测试入口，不会混入实时 feed。
