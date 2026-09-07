@@ -10,6 +10,7 @@ async function readyPage(viewport, path = '/') {
   const errors = []
   page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()) })
   page.on('pageerror', (error) => errors.push(error.message))
+  await page.addInitScript(() => localStorage.setItem('tracescope.lang', 'zh'))
   await page.goto(`http://127.0.0.1:4173${path}`, { waitUntil: 'domcontentloaded' })
   await page.waitForFunction(() => Boolean(window.traceScopeCamera), undefined, { timeout: 15_000 })
   await page.waitForFunction(() => Number(window.traceScopeCountryBorders) > 1_000, undefined, { timeout: 15_000 })
